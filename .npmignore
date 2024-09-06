@@ -1,0 +1,32 @@
+# Node modules
+node_modules/
+
+# Test files
+test/
+
+# Git-related files
+.git/
+.gitignore
+
+# Environment variables
+.env
+
+# NPM-related files
+.npmignore
+package-lock.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Build output
+dist/
+build/
+
+# Test coverage
+coverage/
+
+# IDE specific files
+.idea/
+.vscode/
