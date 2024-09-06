@@ -1,4 +1,4 @@
-# Bumpify
+# Version Bumpify
 
 ![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -16,7 +16,7 @@ A Node.js CLI tool to automatically update the version in `package.json`, `packa
 To install globally:
 
 ```bash
-npm install -g bumpify
+npm install -g version-bumpify
 ```
 
 ## Usage
@@ -72,4 +72,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Bugs and Issues
 
-If you find any bugs or have issues, please report them via [GitHub Issues](https://github.com/AmJaradat01/bumpify/issues).
+If you find any bugs or have issues, please report them via [GitHub Issues](https://github.com/AmJaradat01/version-bumpify/issues).
