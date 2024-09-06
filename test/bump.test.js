@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { updatePackageFile, updateReadme } = require('../lib/helpers');
 
-describe('Version Bumper', function() {
+describe('bumpify', function() {
     const version = '2.0.2';
     
     afterEach(() => {

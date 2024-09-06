@@ -1,5 +1,5 @@
 {
-    "name": "version-bumper",
+    "name": "bumpify",
     "version": "1.0.0",
     "description": "A Node.js CLI tool to automatically update the version in package.json, package-lock.json, and the version badge in README.md",
     "bin": {
@@ -10,7 +10,7 @@
     },
     "repository": {
       "type": "git",
-      "url": "git+https://github.com/AmJaradat01/version-bumper.git"
+      "url": "git+https://github.com/AmJaradat01/bumpify.git"
     },
     "keywords": [
       "version",
@@ -28,9 +28,9 @@
     "author": "Ali M. Jaradat <AmJaradat01@gmail.com>",
     "license": "MIT",
     "bugs": {
-      "url": "https://github.com/AmJaradat01/version-bumper/issues"
+      "url": "https://github.com/AmJaradat01/bumpify/issues"
     },
-    "homepage": "https://github.com/AmJaradat01/version-bumper#readme",
+    "homepage": "https://github.com/AmJaradat01/bumpify#readme",
     "engines": {
     "node": ">=12.0.0"
     },
