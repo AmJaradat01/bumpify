@@ -14,8 +14,9 @@ env:
   VERSION: 1.0.8
 
 jobs:
-  release:
-    name: Release and Publish
+  # Job for setting up, installing dependencies, and signing
+  setup_and_sign:
+    name: Setup, Install, and Sign
     runs-on: ubuntu-latest
 
     steps:
@@ -47,6 +48,16 @@ jobs:
         env:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
 
+  # Job for publishing to npm
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: setup_and_sign
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       # Pull, Commit, and Push Version Bump (if necessary)
       - name: Pull, Commit, and Push
         run: |
@@ -68,13 +79,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Publish to npm
       - name: Publish to npm
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Check if Tag Exists
+  # Job for creating GitHub release
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: publish
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Check if Tag Exists
         id: tag_exists
         run: |
@@ -85,7 +104,6 @@ jobs:
             echo "Tag v${{ env.VERSION }} does not exist."
           fi
 
-      # Create GitHub Release if the tag doesn't exist
       - name: Create GitHub Release (only if tag doesn't exist)
         if: steps.tag_exists.outputs.exitcode != '1'
         uses: actions/create-release@v1
