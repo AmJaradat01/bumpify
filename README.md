@@ -1,6 +1,6 @@
 # Version Bumpify
 
-![Version](https://img.shields.io/badge/version-vnull-blue.svg)
+![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 A Node.js CLI tool to automatically update the version in `package.json`, `package-lock.json`, and the version badge in `README.md.
@@ -43,7 +43,7 @@ This command will:
 Before running the command:
 
 ```md
-![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-v1.0.1-blue.svg)
 ```
 
 After running `bump 2.0.2`:

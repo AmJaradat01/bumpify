@@ -31,14 +31,23 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Auto-bump the version using npm version and pass the correct version to bumpify
-      - name: Auto-increment version and run bumpify
+      # Ensure we're in the correct directory with package.json before running npm version
+      - name: Bump version using npm and run bumpify
         id: bump_version
         run: |
-          # Bump the patch version and capture the new version
+          # Ensure we are in the correct directory
+          if [ ! -f package.json ]; then
+            echo "package.json not found! Exiting..."
+            exit 1
+          fi
+
+          # Bump the version and capture it
           NEW_VERSION=$(npm version patch -m "chore: bump version to %s")
-          # Run bumpify with the new version
-          bumpify ${NEW_VERSION}
+          echo "New version is $NEW_VERSION"
+
+          # Run bumpify to update the version across files
+          bumpify "$NEW_VERSION"
+          
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -64,7 +73,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.bump_version.outputs.NEW_VERSION }}
+          tag_name: ${{ steps.bump_version.outputs.NEW_VERSION }}
           release_name: Release v${{ steps.bump_version.outputs.NEW_VERSION }}
           draft: false
           prerelease: false
