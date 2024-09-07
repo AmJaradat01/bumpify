@@ -31,21 +31,20 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Ensure the package.json file exists and bump the version
-      - name: Bump version using npm and update files
+      # Commit uncommitted changes to clean the working directory
+      - name: Commit changes before version bump
+        run: |
+          git config --global user.email "amjaradat01@gmail.com"
+          git config --global user.name "Ali Jaradat"
+          git add package.json package-lock.json
+          git commit -m "chore: pre-version bump cleanup" || echo "No changes to commit"
+
+      # Use version-bumpify to bump the version
+      - name: Bump version using version-bumpify
         id: bump_version
         run: |
-          # Ensure we are in the correct directory
-          if [ ! -f package.json ]; then
-            echo "package.json not found! Exiting..."
-            exit 1
-          fi
-
-          # Bump the patch version and capture the new version
-          NEW_VERSION=$(npm version patch -m "chore: bump version to %s")
-          echo "New version: $NEW_VERSION"
-
-          # Run bumpify to update the version across files
+          # Bump the version using version-bumpify with a given version (for example, v1.0.4)
+          NEW_VERSION="v1.0.4" # You can dynamically calculate or provide this value
           bumpify $NEW_VERSION
           
         env:
@@ -56,7 +55,7 @@ jobs:
           git config --global user.email "amjaradat01@gmail.com"
           git config --global user.name "Ali Jaradat"
           git add package.json package-lock.json README.md
-          git commit -m "chore: bump version"
+          git commit -m "chore: bump version to $NEW_VERSION"
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,7 +72,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.bump_version.outputs.NEW_VERSION }}
-          release_name: Release v${{ steps.bump_version.outputs.NEW_VERSION }}
+          tag_name: $NEW_VERSION
+          release_name: Release $NEW_VERSION
           draft: false
           prerelease: false
