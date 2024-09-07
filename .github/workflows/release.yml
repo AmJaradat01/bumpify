@@ -11,7 +11,7 @@ permissions:
   checks: write
 
 env:
-  VERSION: 1.0.7
+  VERSION: 1.0.8
 
 jobs:
   release:
@@ -47,7 +47,7 @@ jobs:
         env:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
 
-      # Pull, Commit, and Push Version Bump
+      # Pull, Commit, and Push Version Bump (if necessary)
       - name: Pull, Commit, and Push
         run: |
           git config --global user.email "amjaradat01@gmail.com"
@@ -74,7 +74,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Optionally create a GitHub release only if the tag doesn't exist
+      # Check if Tag Exists
       - name: Check if Tag Exists
         id: tag_exists
         run: |
@@ -85,13 +85,14 @@ jobs:
             echo "Tag v${{ env.VERSION }} does not exist."
           fi
 
+      # Create GitHub Release if the tag doesn't exist
       - name: Create GitHub Release (only if tag doesn't exist)
         if: steps.tag_exists.outputs.exitcode != '1'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: Release ${{ env.VERSION }}
+          tag_name: v${{ env.VERSION }}
+          release_name: Release v${{ env.VERSION }}
           draft: false
           prerelease: false

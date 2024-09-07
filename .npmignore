@@ -30,3 +30,6 @@ coverage/
 # IDE specific files
 .idea/
 .vscode/
+
+*.key
+*.pub
