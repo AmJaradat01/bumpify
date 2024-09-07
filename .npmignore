@@ -32,5 +32,4 @@ coverage/
 .vscode/
 
 *.key
-*.pub
 *.tgz
