@@ -31,10 +31,17 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Automatically bump the version using version-bumpify
-      - name: Bump version using version-bumpify
+      # Automatically bump the version using npm and pass the new version to bumpify
+      - name: Bump version and update files
+        id: bump_version
         run: |
-          bumpify $(npm version --json | jq -r '.version')
+          # Bump the patch version and capture the new version
+          NEW_VERSION=$(npm version patch -m "chore: bump version to %s")
+          echo "New version: $NEW_VERSION"
+
+          # Update package.json, package-lock.json, and README.md with bumpify
+          bumpify ${NEW_VERSION}
+
       - name: Commit and Push Version Bump
         run: |
           git config --global user.email "amjaradat01@gmail.com"
@@ -57,7 +64,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.bump.outputs.version }}
-          release_name: Release v${{ steps.bump.outputs.version }}
+          tag_name: ${{ steps.bump_version.outputs.NEW_VERSION }}
+          release_name: Release ${{ steps.bump_version.outputs.NEW_VERSION }}
           draft: false
           prerelease: false
