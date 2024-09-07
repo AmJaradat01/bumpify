@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '14'
+          node-version: '18'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
@@ -38,7 +38,7 @@ jobs:
           git config --global user.name "Ali Jaradat"
           
           # Add any changes to version-controlled files
-          git add package.json package-lock.json README.md .github/workflows/release.yaml
+          git add package.json package-lock.json README.md .github/workflows/release.yml
           
           # Commit changes (if there are any)
           git commit -m "chore: prepare release for ${{ env.VERSION }}" || echo "No changes to commit"
