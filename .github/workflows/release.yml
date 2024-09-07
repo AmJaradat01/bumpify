@@ -37,8 +37,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
-        working-directory: ./  # Set the working directory to the root of the repository
         run: npm install
+        working-directory: ./  # Make sure this points to the correct directory
 
   # Job 3: Install Cosign
   install_cosign:
@@ -51,6 +51,7 @@ jobs:
           curl -LO https://github.com/sigstore/cosign/releases/download/v1.4.1/cosign-linux-amd64
           chmod +x cosign-linux-amd64
           sudo mv cosign-linux-amd64 /usr/local/bin/cosign
+        working-directory: ./  # Ensure we are in the root directory
 
   # Job 4: Sign files
   sign_files:
@@ -62,12 +63,14 @@ jobs:
         run: |
           echo "${{ secrets.COSIGN_KEY }}" > cosign.key
           chmod 600 cosign.key
+        working-directory: ./  # Ensure this is executed in the root directory
 
       - name: Sign package files
         run: |
           cosign sign-blob --key cosign.key package.json
           cosign sign-blob --key cosign.key package-lock.json
           cosign sign-blob --key cosign.key README.md
+        working-directory: ./  # Ensure this points to the correct directory
 
   # Job 5: Pull, commit, and push version bump (if needed)
   push_changes:
@@ -91,7 +94,7 @@ jobs:
           
           # Push the changes to main
           git push origin main
-          
+        working-directory: ./  # Ensure this points to the correct directory
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -103,6 +106,7 @@ jobs:
     steps:
       - name: Publish to npm
         run: npm publish --access public
+        working-directory: ./  # Ensure this points to the correct directory
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -121,10 +125,12 @@ jobs:
           else
             echo "Tag v${{ env.VERSION }} does not exist."
           fi
+        working-directory: ./  # Ensure this points to the correct directory
 
       - name: Create GitHub Release (only if tag doesn't exist)
         if: steps.tag_exists.outputs.exitcode != '1'
         uses: actions/create-release@v1
+        working-directory: ./  # Ensure this points to the correct directory
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
