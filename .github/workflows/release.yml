@@ -22,10 +22,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Set working directory if your package.json is in a subfolder
-      - name: Set Working Directory (if needed)
-        run: echo "::set-output name=working-directory::$(pwd)"
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -34,7 +30,6 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-        working-directory: ./  # Adjust this to the correct directory if needed
 
       # Install Cosign for signing the build
       - name: Install Cosign
@@ -43,14 +38,14 @@ jobs:
           chmod +x cosign-linux-amd64
           sudo mv cosign-linux-amd64 /usr/local/bin/cosign
 
-      # Sign the package files using cosign
+      # Inject the decrypted key from GitHub Secrets and sign files
       - name: Sign package files
         run: |
-          cosign sign-blob --key <(echo "${{ secrets.COSIGN_KEY }}") package.json
-          cosign sign-blob --key <(echo "${{ secrets.COSIGN_KEY }}") package-lock.json
-          cosign sign-blob --key <(echo "${{ secrets.COSIGN_KEY }}") README.md
-        env:
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          echo "${{ secrets.COSIGN_KEY }}" > cosign_unencrypted.key
+          chmod 600 cosign_unencrypted.key
+          cosign sign-blob --key cosign_unencrypted.key package.json
+          cosign sign-blob --key cosign_unencrypted.key package-lock.json
+          cosign sign-blob --key cosign_unencrypted.key README.md
 
       # Pull, Commit, and Push Version Bump
       - name: Pull, Commit, and Push
@@ -58,18 +53,10 @@ jobs:
           git config --global user.email "amjaradat01@gmail.com"
           git config --global user.name "Ali Jaradat"
           
-          # Add any changes to version-controlled files
           git add package.json package-lock.json README.md .github/workflows/release.yml
-          
-          # Commit changes (if there are any)
           git commit -m "chore: prepare release for ${{ env.VERSION }}" || echo "No changes to commit"
-          
-          # Pull the latest changes from the remote main branch
           git pull origin main --rebase
-          
-          # Push the changes to main
           git push origin main
-          
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -79,7 +66,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Optionally create a GitHub release only if the tag doesn't exist
+      # Optionally create a GitHub release if the tag doesn't exist
       - name: Check if Tag Exists
         id: tag_exists
         run: |
@@ -89,14 +76,14 @@ jobs:
           else
             echo "Tag v${{ env.VERSION }} does not exist."
           fi
-          
+
       - name: Create GitHub Release (only if tag doesn't exist)
         if: steps.tag_exists.outputs.exitcode != '1'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: Release ${{ env.VERSION }}
+          tag_name: v${{ env.VERSION }}
+          release_name: Release v${{ env.VERSION }}
           draft: false
           prerelease: false
