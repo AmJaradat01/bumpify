@@ -1,63 +1,64 @@
-name: Publish to npm
+name: Release
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+
 jobs:
   release:
+    name: Release and Publish
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Set up Node.js environment
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '14'
           registry-url: 'https://registry.npmjs.org'
 
-      # Install version-bumpify globally
-      - name: Install version-bumpify globally
+      - name: Install version-bumpify
         run: npm install -g version-bumpify
 
-      # Install dependencies
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm install
 
-      # Run bumpify and commit changes
-      - name: Run bumpify and commit changes
+      # Automatically bump the version using version-bumpify
+      - name: Bump version using version-bumpify
         run: |
           bumpify $(npm version --json | jq -r '.version')
+
+      - name: Commit and Push Version Bump
+        run: |
           git config --global user.email "amjaradat01@gmail.com"
           git config --global user.name "Ali Jaradat"
           git add package.json package-lock.json README.md
-          git commit -m "chore: update files before version bump"
-          git push origin main
-
-      # Auto-increment the version using npm version
-      # Options: patch, minor, or major
-      - name: Auto-increment version using npm version
-        run: |
-          npm version patch  # Change this to minor or major if needed
-
-      # Build the project (Optional step)
-      - name: Build the project
-        run: npm run build
-
-      # Commit the version bump
-      - name: Commit version bump
-        run: |
-          git add package.json package-lock.json README.md
           git commit -m "chore: bump version"
           git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Publish to npm
       - name: Publish to npm
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Optionally create a GitHub release
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.bump.outputs.version }}
+          release_name: Release v${{ steps.bump.outputs.version }}
+          draft: false
+          prerelease: false
