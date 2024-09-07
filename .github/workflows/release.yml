@@ -14,14 +14,20 @@ env:
   VERSION: 1.0.8
 
 jobs:
-  release:
-    name: Release and Publish
+  # Job 1: Checkout the repository
+  checkout_repo:
+    name: Checkout Repository
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
+  # Job 2: Setup Node.js and install dependencies
+  setup_node:
+    name: Setup Node.js and Install Dependencies
+    runs-on: ubuntu-latest
+    needs: checkout_repo
+    steps:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -31,28 +37,41 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Install Cosign for signing the build
+  # Job 3: Install Cosign
+  install_cosign:
+    name: Install Cosign
+    runs-on: ubuntu-latest
+    needs: setup_node
+    steps:
       - name: Install Cosign
         run: |
           curl -LO https://github.com/sigstore/cosign/releases/download/v1.4.1/cosign-linux-amd64
           chmod +x cosign-linux-amd64
           sudo mv cosign-linux-amd64 /usr/local/bin/cosign
 
-      # Sign the package files using cosign
+  # Job 4: Sign files
+  sign_files:
+    name: Sign Files
+    runs-on: ubuntu-latest
+    needs: install_cosign
+    steps:
+      - name: Inject Key from Secrets
+        run: |
+          echo "${{ secrets.COSIGN_KEY }}" > cosign.key
+          chmod 600 cosign.key
+
       - name: Sign package files
         run: |
-          # Store the key in a temporary file
-          echo "${{ secrets.COSIGN_KEY }}" > cosign.key
-          
-          # Decrypt the private key using the password from secrets
-          echo "${{ secrets.COSIGN_PASSWORD }}" | openssl rsa -in cosign.key -out cosign_unencrypted.key
-          
-          # Sign the files
-          cosign sign-blob --key cosign_unencrypted.key package.json
-          cosign sign-blob --key cosign_unencrypted.key package-lock.json
-          cosign sign-blob --key cosign_unencrypted.key README.md
+          cosign sign-blob --key cosign.key package.json
+          cosign sign-blob --key cosign.key package-lock.json
+          cosign sign-blob --key cosign.key README.md
 
-      # Pull, Commit, and Push Version Bump (if necessary)
+  # Job 5: Pull, commit, and push version bump (if needed)
+  push_changes:
+    name: Commit and Push Changes
+    runs-on: ubuntu-latest
+    needs: sign_files
+    steps:
       - name: Pull, Commit, and Push
         run: |
           git config --global user.email "amjaradat01@gmail.com"
@@ -73,13 +92,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Publish to npm
+  # Job 6: Publish to npm
+  publish_to_npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: push_changes
+    steps:
       - name: Publish to npm
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Check if Tag Exists
+  # Job 7: Create GitHub Release
+  create_github_release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: publish_to_npm
+    steps:
       - name: Check if Tag Exists
         id: tag_exists
         run: |
@@ -90,7 +119,6 @@ jobs:
             echo "Tag v${{ env.VERSION }} does not exist."
           fi
 
-      # Create GitHub Release if the tag doesn't exist
       - name: Create GitHub Release (only if tag doesn't exist)
         if: steps.tag_exists.outputs.exitcode != '1'
         uses: actions/create-release@v1
