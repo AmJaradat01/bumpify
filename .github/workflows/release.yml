@@ -49,20 +49,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Commit and push the new version to the main branch
+      # Pull, Commit, and Push Version Bump
       - name: Pull, Commit, and Push Version Bump
         run: |
           git config --global user.email "amjaradat01@gmail.com"
           git config --global user.name "Ali Jaradat"
           
-          # Pull the latest changes from the remote main branch
-          git pull origin main --rebase
-          
-          # Add version bump changes
+          # Add version bump changes before pulling
           git add package.json package-lock.json README.md
           
-          # Commit the version bump
-          git commit -m "chore: bump version to $NEW_VERSION"
+          # Commit version bump changes
+          git commit -m "chore: bump version to $NEW_VERSION" || echo "No changes to commit"
+          
+          # Pull the latest changes from the remote main branch
+          git pull origin main --rebase
           
           # Push the changes to main
           git push origin main
