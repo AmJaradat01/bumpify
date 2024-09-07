@@ -41,9 +41,9 @@ jobs:
       # Sign the package files using cosign
       - name: Sign package files
         run: |
-          cosign sign-blob --key <(echo "${{ secrets.COSIGN_KEY }}") package.json
-          cosign sign-blob --key <(echo "${{ secrets.COSIGN_KEY }}") package-lock.json
-          cosign sign-blob --key <(echo "${{ secrets.COSIGN_KEY }}") README.md
+          echo "${{ secrets.COSIGN_PASSWORD }}" | cosign sign-blob --key <(echo "${{ secrets.COSIGN_KEY }}") package.json
+          echo "${{ secrets.COSIGN_PASSWORD }}" | cosign sign-blob --key <(echo "${{ secrets.COSIGN_KEY }}") package-lock.json
+          echo "${{ secrets.COSIGN_PASSWORD }}" | cosign sign-blob --key <(echo "${{ secrets.COSIGN_KEY }}") README.md
         env:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
 
