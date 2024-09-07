@@ -11,56 +11,84 @@ permissions:
   checks: write
 
 env:
-  VERSION: 1.0.7
+  VERSION: 1.0.8
 
 jobs:
-  release:
-    name: Release and Publish
+  # Job 1: Checkout the repository
+  checkout_repo:
+    name: Checkout Repository
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
+  # Job 2: Run Tests (optional but recommended)
+  run_tests:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: checkout_repo
+    steps:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
-
       - name: Install Dependencies
         run: npm install
+      - name: Run Tests
+        run: npm test
 
-      # Install Cosign for signing the build
+  # Job 3: Install Cosign
+  install_cosign:
+    name: Install Cosign
+    runs-on: ubuntu-latest
+    needs: run_tests
+    steps:
       - name: Install Cosign
         run: |
           curl -LO https://github.com/sigstore/cosign/releases/download/v1.4.1/cosign-linux-amd64
           chmod +x cosign-linux-amd64
           sudo mv cosign-linux-amd64 /usr/local/bin/cosign
 
-      # Inject the Cosign key from secrets and sign the package files using Cosign
-      - name: Inject Cosign Key
+  # Job 4: Generate and Sign Provenance
+  generate_provenance:
+    name: Generate and Sign Provenance
+    runs-on: ubuntu-latest
+    needs: install_cosign
+    steps:
+      - name: Inject Key from Secrets
         run: |
           echo "${{ secrets.COSIGN_KEY }}" > cosign.key
           chmod 600 cosign.key
 
-      # Sign the package files using Cosign
-      - name: Sign package files
+      # Generate a SBOM (Software Bill of Materials) with syft (optional)
+      - name: Generate SBOM
         run: |
-          cosign sign-blob --key cosign.key package.json
-          cosign sign-blob --key cosign.key package-lock.json
-          cosign sign-blob --key cosign.key README.md
-        env:
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          syft . -o json > sbom.json
 
-      # Pull, Commit, and Push Version Bump
+      # Sign the SBOM with cosign
+      - name: Sign SBOM
+        run: cosign sign-blob --key cosign.key sbom.json
+
+      # Attest the package with metadata and provenance
+      - name: Attest Package
+        run: |
+          cosign attest --key cosign.key --predicate-type=https://in-toto.io/Statement/v0.1 \
+          --predicate sbom.json --type provenance
+
+  # Job 5: Pull, commit, and push version bump (if needed)
+  push_changes:
+    name: Commit and Push Changes
+    runs-on: ubuntu-latest
+    needs: generate_provenance
+    steps:
       - name: Pull, Commit, and Push
         run: |
           git config --global user.email "amjaradat01@gmail.com"
           git config --global user.name "Ali Jaradat"
           
           # Add any changes to version-controlled files
-          git add package.json package-lock.json README.md .github/workflows/release.yml
+          git add package.json package-lock.json README.md sbom.json .github/workflows/release.yml
           
           # Commit changes (if there are any)
           git commit -m "chore: prepare release for ${{ env.VERSION }}" || echo "No changes to commit"
@@ -74,13 +102,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Publish to npm
+  # Job 6: Publish to npm
+  publish_to_npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: push_changes
+    steps:
       - name: Publish to npm
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Optionally create a GitHub release only if the tag doesn't exist
+  # Job 7: Create GitHub Release
+  create_github_release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: publish_to_npm
+    steps:
       - name: Check if Tag Exists
         id: tag_exists
         run: |
@@ -97,7 +135,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: Release ${{ env.VERSION }}
+          tag_name: v${{ env.VERSION }}
+          release_name: Release v${{ env.VERSION }}
           draft: false
           prerelease: false
