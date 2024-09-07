@@ -18,29 +18,36 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '14'  # You can specify the Node.js version you want
+          node-version: '18'
           registry-url: 'https://registry.npmjs.org'
 
       # Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # Run bumpify and commit changes
+      - name: Run bumpify and commit changes
+        run: |
+          bumpify $(npm version --json | jq -r '.version')
+          git config --global user.email "amjaradat01@gmail.com"
+          git config --global user.name "Ali Jaradat"
+          git add package.json package-lock.json README.md
+          git commit -m "chore: update files before version bump"
+          git push origin main
+
       # Auto-increment the version using npm version
       # Options: patch, minor, or major
       - name: Auto-increment version using npm version
         run: |
           npm version patch  # Change this to minor or major if needed
-          bumpify $(npm version --json | jq -r '.version')
 
       # Build the project (Optional step)
       - name: Build the project
         run: npm run build
 
-      # Commit the version bump, including README.md
+      # Commit the version bump
       - name: Commit version bump
         run: |
-          git config --global user.email "amjaradat01@gmail.com"
-          git config --global user.name "Ali Jaradat"
           git add package.json package-lock.json README.md
           git commit -m "chore: bump version"
           git push origin main
