@@ -130,7 +130,6 @@ jobs:
       - name: Create GitHub Release (only if tag doesn't exist)
         if: steps.tag_exists.outputs.exitcode != '1'
         uses: actions/create-release@v1
-        working-directory: ./  # Ensure this points to the correct directory
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
