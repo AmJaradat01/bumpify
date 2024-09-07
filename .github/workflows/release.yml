@@ -39,24 +39,25 @@ jobs:
           git add package.json package-lock.json
           git commit -m "chore: pre-version bump cleanup" || echo "No changes to commit"
 
-      # Use version-bumpify to bump the version
+      # Use version-bumpify to bump the version without 'v' prefix
       - name: Bump version using version-bumpify
         id: bump_version
         run: |
-          # Bump the version using version-bumpify with a given version (for example, v1.0.4)
-          NEW_VERSION="v1.0.4" # You can dynamically calculate or provide this value
+          # Example of setting the new version number
+          NEW_VERSION="1.0.2" # You can dynamically calculate or set this value
           bumpify $NEW_VERSION
           
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Commit and push the new version to the main branch
       - name: Commit and Push Version Bump
         run: |
           git config --global user.email "amjaradat01@gmail.com"
           git config --global user.name "Ali Jaradat"
           git add package.json package-lock.json README.md
           git commit -m "chore: bump version to $NEW_VERSION"
-          git push origin main
+          git push origin HEAD:main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
