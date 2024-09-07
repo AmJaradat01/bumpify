@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { updatePackageFile, updateReadme } = require('../lib/helpers');
+const { updatePackageFile, updateReadme, updateWorkflowVersion } = require('../lib/helpers');
 
 const newVersion = process.argv[2];
 if (!newVersion) {
@@ -12,3 +12,4 @@ if (!newVersion) {
 updatePackageFile('package.json', newVersion);
 updatePackageFile('package-lock.json', newVersion);
 updateReadme(newVersion);
+updateWorkflowVersion(newVersion);
