@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          path: ./  # Ensure the repository is checked out into the current directory
 
   # Job 2: Setup Node.js and install dependencies
   setup_node:
@@ -35,7 +37,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
-        working-directory: ./  # Set the working directory explicitly
+        working-directory: ./  # Set the working directory to the root of the repository
         run: npm install
 
   # Job 3: Install Cosign
