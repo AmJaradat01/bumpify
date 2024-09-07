@@ -43,7 +43,7 @@ This command will:
 Before running the command:
 
 ```md
-![Version](https://img.shields.io/badge/version-v2.0.2-blue.svg)
+![Version](https://img.shields.io/badge/version-v1.0.2-blue.svg)
 ```
 
 After running `bump 2.0.2`:
