@@ -31,10 +31,16 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Automatically bump the version using version-bumpify
-      - name: Bump version using version-bumpify
+      # Auto-bump the version using npm version and pass the correct version to bumpify
+      - name: Auto-increment version and run bumpify
+        id: bump_version
         run: |
-          bumpify $(npm version --json | jq -r '.version')
+          # Bump the patch version and capture the new version
+          NEW_VERSION=$(npm version patch -m "chore: bump version to %s")
+          # Run bumpify with the new version
+          bumpify ${NEW_VERSION}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit and Push Version Bump
         run: |
@@ -58,7 +64,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.bump.outputs.version }}
-          release_name: Release v${{ steps.bump.outputs.version }}
+          tag_name: v${{ steps.bump_version.outputs.NEW_VERSION }}
+          release_name: Release v${{ steps.bump_version.outputs.NEW_VERSION }}
           draft: false
           prerelease: false
