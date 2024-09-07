@@ -28,28 +28,20 @@ jobs:
           node-version: '14'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install version-bumpify
-        run: npm install -g version-bumpify
-
       - name: Install Dependencies
         run: npm install
 
-      # Use version-bumpify to bump the version using the centralized version value
-      - name: Bump version manually using version-bumpify
-        run: |
-          bumpify ${{ env.VERSION }}  # Use the centralized version value
-
-      # Commit and push the new version to the main branch
-      - name: Pull, Commit, and Push Version Bump
+      # Pull, Commit, and Push Version Bump (Version bump already handled manually)
+      - name: Pull, Commit, and Push
         run: |
           git config --global user.email "amjaradat01@gmail.com"
           git config --global user.name "Ali Jaradat"
           
-          # Add version bump changes
-          git add package.json package-lock.json README.md
+          # Add any changes to version-controlled files
+          git add package.json package-lock.json README.md .github/workflows/release.yaml
           
-          # Commit version bump changes
-          git commit -m "chore: bump version to ${{ env.VERSION }}" || echo "No changes to commit"
+          # Commit changes (if there are any)
+          git commit -m "chore: prepare release for ${{ env.VERSION }}" || echo "No changes to commit"
           
           # Pull the latest changes from the remote main branch
           git pull origin main --rebase
