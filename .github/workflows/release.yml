@@ -21,6 +21,10 @@ jobs:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
 
+      # Install version-bumpify globally
+      - name: Install version-bumpify globally
+        run: npm install -g version-bumpify
+
       # Install dependencies
       - name: Install dependencies
         run: npm install
