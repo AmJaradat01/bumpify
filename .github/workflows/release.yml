@@ -35,6 +35,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
+        working-directory: ./  # Set the working directory explicitly
         run: npm install
 
   # Job 3: Install Cosign
