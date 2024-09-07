@@ -31,16 +31,25 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Automatically bump the version using npm and pass the new version to bumpify
-      - name: Bump version and update files
+      # Ensure the package.json file exists and bump the version
+      - name: Bump version using npm and update files
         id: bump_version
         run: |
+          # Ensure we are in the correct directory
+          if [ ! -f package.json ]; then
+            echo "package.json not found! Exiting..."
+            exit 1
+          fi
+
           # Bump the patch version and capture the new version
           NEW_VERSION=$(npm version patch -m "chore: bump version to %s")
           echo "New version: $NEW_VERSION"
 
-          # Update package.json, package-lock.json, and README.md with bumpify
-          bumpify ${NEW_VERSION}
+          # Run bumpify to update the version across files
+          bumpify $NEW_VERSION
+          
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit and Push Version Bump
         run: |
@@ -64,7 +73,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.bump_version.outputs.NEW_VERSION }}
-          release_name: Release ${{ steps.bump_version.outputs.NEW_VERSION }}
+          tag_name: v${{ steps.bump_version.outputs.NEW_VERSION }}
+          release_name: Release v${{ steps.bump_version.outputs.NEW_VERSION }}
           draft: false
           prerelease: false
